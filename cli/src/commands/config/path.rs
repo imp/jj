@@ -30,7 +30,7 @@ use crate::ui::Ui;
 /// See `jj config edit` if you'd like to immediately edit a file.
 #[derive(clap::Args, Clone, Debug)]
 pub struct ConfigPathArgs {
-    #[command(flatten)]
+    #[arg(required = true, value_enum)]
     pub level: ConfigLevelArgs,
 }
 
