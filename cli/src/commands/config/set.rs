@@ -49,7 +49,7 @@ pub struct ConfigSetArgs {
     /// edit` to edit the TOML file directly.
     #[arg(required = true, value_parser = parse_value_or_bare_string)]
     value: ConfigValue,
-    #[command(flatten)]
+    #[arg(required = true, value_enum)]
     level: ConfigLevelArgs,
 }
 

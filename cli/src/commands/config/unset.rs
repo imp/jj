@@ -29,7 +29,7 @@ use crate::ui::Ui;
 pub struct ConfigUnsetArgs {
     #[arg(required = true, add = ArgValueCandidates::new(complete::leaf_config_keys))]
     name: ConfigNamePathBuf,
-    #[command(flatten)]
+    #[arg(required = true, value_enum)]
     level: ConfigLevelArgs,
 }
 
