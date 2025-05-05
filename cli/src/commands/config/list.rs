@@ -32,18 +32,18 @@ use crate::ui::Ui;
 
 /// List variables set in config files, along with their values.
 #[derive(clap::Args, Clone, Debug)]
-#[command(mut_group("config_level", |g| g.required(false)))]
+#[command(mut_arg("level", |g| g.required(false)))]
 pub struct ConfigListArgs {
     /// An optional name of a specific config option to look up.
     #[arg(add = ArgValueCandidates::new(complete::config_keys))]
     pub name: Option<ConfigNamePathBuf>,
     /// Whether to explicitly include built-in default values in the list.
-    #[arg(long, conflicts_with = "config_level")]
+    #[arg(long, conflicts_with = "level")]
     pub include_defaults: bool,
     /// Allow printing overridden values.
     #[arg(long)]
     pub include_overridden: bool,
-    #[command(flatten)]
+    #[arg(required = true, value_enum)]
     pub level: ConfigLevelArgs,
     /// Render each variable using the given template
     ///
