@@ -27,7 +27,8 @@ use crate::ui::Ui;
 /// does.
 #[derive(clap::Args, Clone, Debug)]
 pub struct ConfigEditArgs {
-    #[command(flatten)]
+    // #[command(flatten)]
+    #[arg(required = true, value_enum)]
     pub level: ConfigLevelArgs,
 }
 

@@ -44,44 +44,40 @@ use crate::command_error::user_error;
 use crate::config::ConfigEnv;
 use crate::ui::Ui;
 
-#[derive(clap::Args, Clone, Debug)]
-#[group(id = "config_level", multiple = false, required = true)]
-pub(crate) struct ConfigLevelArgs {
+#[derive(clap::ValueEnum, Clone, Copy, Debug)]
+#[value(name = "config_level")]
+pub(crate) enum ConfigLevelArgs {
     /// Target the user-level config
-    #[arg(long)]
-    user: bool,
+    User,
 
     /// Target the repo-level config
-    #[arg(long)]
-    repo: bool,
+    Repo,
 }
 
 impl ConfigLevelArgs {
     fn get_source_kind(&self) -> Option<ConfigSource> {
-        if self.user {
-            Some(ConfigSource::User)
-        } else if self.repo {
-            Some(ConfigSource::Repo)
-        } else {
-            None
+        match self {
+            Self::User => Some(ConfigSource::User),
+            Self::Repo => Some(ConfigSource::Repo),
         }
     }
 
     fn config_paths<'a>(&self, config_env: &'a ConfigEnv) -> Result<Vec<&'a Path>, CommandError> {
-        if self.user {
-            let paths = config_env.user_config_paths().collect_vec();
-            if paths.is_empty() {
-                return Err(user_error("No user config path found"));
+        match self {
+            Self::User => {
+                let paths = config_env.user_config_paths().collect_vec();
+                if !paths.is_empty() {
+                    Ok(paths)
+                } else {
+                    Err("No user config path found")
+                }
             }
-            Ok(paths)
-        } else if self.repo {
-            config_env
+            Self::Repo => config_env
                 .repo_config_path()
                 .map(|p| vec![p])
-                .ok_or_else(|| user_error("No repo config path found"))
-        } else {
-            panic!("No config_level provided")
+                .ok_or("No repo config path found"),
         }
+        .map_err(user_error)
     }
 
     fn edit_config_file(
@@ -91,7 +87,7 @@ impl ConfigLevelArgs {
     ) -> Result<ConfigFile, CommandError> {
         let config_env = command.config_env();
         let config = command.raw_config();
-        let pick_one = |mut files: Vec<ConfigFile>, not_found_error: &str| {
+        let pick_one = |mut files: Vec<ConfigFile>, not_found_error| {
             if files.len() > 1 {
                 let mut choices = vec![];
                 let mut formatter = ui.stderr_formatter();
@@ -106,21 +102,97 @@ impl ConfigLevelArgs {
             }
             files.pop().ok_or_else(|| user_error(not_found_error))
         };
-        if self.user {
-            pick_one(
+        match self {
+            Self::User => pick_one(
                 config_env.user_config_files(config)?,
                 "No user config path found to edit",
-            )
-        } else if self.repo {
-            pick_one(
+            ),
+            Self::Repo => pick_one(
                 config_env.repo_config_files(config)?,
                 "No repo config path found to edit",
-            )
-        } else {
-            panic!("No config_level provided")
+            ),
         }
     }
 }
+
+// #[derive(clap::Args, Clone, Debug)]
+// #[group(id = "config_level", multiple = false, required = true)]
+// pub(crate) struct ConfigLevelArgs {
+//     /// Target the user-level config
+//     #[arg(long)]
+//     user: bool,
+
+//     /// Target the repo-level config
+//     #[arg(long)]
+//     repo: bool,
+// }
+
+// impl ConfigLevelArgs {
+//     fn get_source_kind(&self) -> Option<ConfigSource> {
+//         if self.user {
+//             Some(ConfigSource::User)
+//         } else if self.repo {
+//             Some(ConfigSource::Repo)
+//         } else {
+//             None
+//         }
+//     }
+
+//     fn config_paths<'a>(&self, config_env: &'a ConfigEnv) -> Result<Vec<&'a
+// Path>, CommandError> {         if self.user {
+//             let paths = config_env.user_config_paths().collect_vec();
+//             if paths.is_empty() {
+//                 Err(user_error("No user config path found"))
+//             } else {
+//                 Ok(paths)
+//             }
+//         } else if self.repo {
+//             config_env
+//                 .repo_config_path()
+//                 .map(|p| vec![p])
+//                 .ok_or_else(|| user_error("No repo config path found"))
+//         } else {
+//             panic!("No config_level provided")
+//         }
+//     }
+
+//     fn edit_config_file(
+//         &self,
+//         ui: &Ui,
+//         command: &CommandHelper,
+//     ) -> Result<ConfigFile, CommandError> {
+//         let config_env = command.config_env();
+//         let config = command.raw_config();
+//         let pick_one = |mut files: Vec<ConfigFile>, not_found_error: &str| {
+//             if files.len() > 1 {
+//                 let mut choices = vec![];
+//                 let mut formatter = ui.stderr_formatter();
+//                 for (i, file) in files.iter().enumerate() {
+//                     writeln!(formatter, "{}: {}", i + 1,
+// file.path().display())?;                     choices.push((i +
+// 1).to_string());                 }
+//                 drop(formatter);
+//                 let index =
+//                     ui.prompt_choice("Choose a config file (default 1)",
+// &choices, Some(0))?;                 return Ok(files[index].clone());
+//             }
+//             files.pop().ok_or_else(|| user_error(not_found_error))
+//         };
+//         if self.user {
+//             pick_one(
+//                 config_env.user_config_files(config)?,
+//                 "No user config path found to edit",
+//             )
+//         } else if self.repo {
+//             pick_one(
+//                 config_env.repo_config_files(config)?,
+//                 "No repo config path found to edit",
+//             )
+//         } else {
+//             panic!("No config_level provided")
+//         }
+//     }
+// }
 
 /// Manage config options
 ///
