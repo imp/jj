@@ -3095,9 +3095,8 @@ pub fn format_remote_symbol(name: &str, remote: &str) -> String {
     expect(clippy::cloned_ref_to_slice_refs, reason = "makes tests more readable")
 )]
 mod tests {
-    use std::path::PathBuf;
-
     use assert_matches::assert_matches;
+    use camino::Utf8PathBuf;
 
     use super::*;
 
@@ -3138,8 +3137,8 @@ mod tests {
     ) -> Result<Rc<UserRevsetExpression>, RevsetParseError> {
         // Set up pseudo context to resolve `workspace_name@` and `file(path)`
         let path_converter = RepoPathUiConverter::Fs {
-            cwd: PathBuf::from("/"),
-            base: PathBuf::from("/"),
+            cwd: Utf8PathBuf::from("/"),
+            base: Utf8PathBuf::from("/"),
         };
         let workspace_ctx = RevsetWorkspaceContext {
             path_converter: &path_converter,
